@@ -1,7 +1,23 @@
+import { config } from 'dotenv';
+
+config();
+
 export const DB_CONFIG = {
-    fileMustExist: false,
-    timeout: 5000,
-    verbose: process.env.NODE_ENV === 'development' ? console.log : null
+    client: 'better-sqlite3',
+    connection: {
+        filename: './data/bot.db'
+    },
+    useNullAsDefault: true
+};
+
+export const MYSQL_CONFIG = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 };
 
 export const REQUIRED_TABLES = [

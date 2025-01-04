@@ -79,6 +79,12 @@ class StartupManager {
     trackCommandLoad(commandName, success, error = null) {
         this.commandStatus.set(commandName, { success, error });
     }
+
+    logStartupTime(startTime) {
+        const endTime = Date.now();
+        const duration = endTime - startTime;
+        console.log(`Startup completed in ${duration}ms`);
+    }
 }
 
 export const startupManager = new StartupManager();

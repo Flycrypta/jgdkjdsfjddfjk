@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder } from 'discord.js';
 import { dbManager } from '../db/database.js';
-import { WHEEL_TYPES as wheels } from '../utils/index.js'; // Importing wheel arrays from index.js
+import { WHEEL_TYPES as wheels, CARS as GameCars } from '../utils/index.js'; // Importing wheel arrays from index.js and renaming CARS to GameCars
+import { DatabaseError } from '../db/errors/DatabaseError.js';
 
 export const data = new SlashCommandBuilder()
     .setName('spin')

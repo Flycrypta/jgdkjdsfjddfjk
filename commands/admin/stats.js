@@ -1,6 +1,7 @@
 import BaseCommand from '../base-command.js';
 import { EmbedBuilder } from 'discord.js';
 import fs from 'fs';
+import { dbManager } from '../../db/database.js';
 
 export default class StatsCommand extends BaseCommand {
     constructor() {

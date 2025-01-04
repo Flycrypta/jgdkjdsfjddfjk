@@ -3,6 +3,9 @@ import { dbManager } from '../db/database.js';
 import { CARS, CAR_MODS } from '../utils/index.js';
 import { ErrorHandler } from '../utils/errorHandler.js';
 
+// Ensure DatabaseError is imported only once
+// import { DatabaseError } from '../db/errors/DatabaseError.js';
+
 export const data = new SlashCommandBuilder()
     .setName('mod')
     .setDescription('Modify your car')

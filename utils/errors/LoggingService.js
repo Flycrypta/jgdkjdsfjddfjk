@@ -53,6 +53,16 @@ export class LoggingService {
         }
     }
 
+    logWarning(warningContext) {
+        const { type, logLevel = 'warn' } = warningContext;
+
+        this.logger.log(logLevel, {
+            type,
+            ...warningContext,
+            timestamp: new Date().toISOString()
+        });
+    }
+
     async _handleDatabaseError(errorContext) {
         // Additional database error handling logic
         await this._notifyAdmin(errorContext);

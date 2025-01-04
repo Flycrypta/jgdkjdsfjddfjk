@@ -136,6 +136,14 @@ export class ErrorHandler {
         }
     }
 
+    static logErrorDetails(error) {
+        console.error('Error Details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+    }
+
     static getErrorMessage(error) {
         // Customize error messages based on error type
         if (error instanceof ValidationError) {

@@ -57,3 +57,40 @@ export default {
         ticketDeletion: 24 * 60 * 60 * 1000
     }
 };
+
+export const config = {
+    features: {
+        economy: true,
+        racing: true,
+        gambling: true,
+        trading: true,
+        maintenance: false
+    },
+    
+    limits: {
+        maxDailyTransactions: 50,
+        maxTradeValue: 1000000,
+        maxGarageSlots: 25,
+        cooldowns: {
+            work: 3600,
+            race: 300,
+            daily: 86400
+        }
+    },
+
+    monitoring: {
+        enabled: true,
+        logLevel: 'info',
+        metrics: ['commands', 'errors', 'transactions']
+    },
+
+    database: {
+        maxConnections: 10,
+        timeout: 5000,
+        retryAttempts: 3
+    }
+};
+
+export function isFeatureEnabled(featureName) {
+    return config.features[featureName] === true;
+}

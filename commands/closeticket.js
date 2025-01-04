@@ -1,7 +1,11 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { EmbedBuilder } from 'discord.js';
-import { Database } from '../../database/database.js';
-import { DatabaseError } from '../../db/errors/DatabaseError.js';
+import { dbManager } from '../db/database.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const closeticketCommand = {
     data: new SlashCommandBuilder()

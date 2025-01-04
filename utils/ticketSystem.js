@@ -72,7 +72,8 @@ class TicketManager {
             description,
             status: 'OPEN',
             createdAt: Date.now(),
-            closeTime: Date.now() + TICKET_CONFIG.CATEGORIES[category].autoCloseTime
+            closeTime: Date.now() + TICKET_CONFIG.CATEGORIES[category].autoCloseTime,
+            priority: 'NORMAL' // New property
         };
 
         const embed = this.createTicketEmbed(ticket);

@@ -2,6 +2,7 @@ import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { Logger } from '../utils/logger.js';
+import { fileToURL, getFilePath } from '../utils/pathUtils.js';
 
 const log = new Logger('EventHandler');
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -12,7 +13,7 @@ export async function loadEvents(client) {
 
     for (const file of eventFiles) {
         try {
-            const filePath = join(eventsPath, file);
+            const filePath = fileToURL(join(eventsPath, file));
             const event = await import(filePath);
 
             if (event.once) {

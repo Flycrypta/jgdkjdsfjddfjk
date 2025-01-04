@@ -58,61 +58,36 @@ export const DatabaseErrorTypes = {
         code: 'TRADE_ERROR',
         emoji: '🤝',
         message: 'Trade operation failed'
+    },
+    DEPLOYMENT: {
+        code: 'DEPLOYMENT_ERROR',
+        emoji: '🚀',
+        message: 'Deployment failed'
+    },
+    ROLLBACK: {
+        code: 'ROLLBACK_ERROR',
+        emoji: '↩️',
+        message: 'Rollback failed'
     }
 };
 
+export const DatabaseErrorCodes = {
+    CONNECTION_ERROR: 'DB_CONNECTION_ERROR',
+    INITIALIZATION_FAILED: 'DB_INIT_FAILED',
+    QUERY_FAILED: 'DB_QUERY_FAILED',
+    TABLE_NOT_FOUND: 'DB_TABLE_NOT_FOUND',
+    INVALID_SCHEMA: 'DB_INVALID_SCHEMA',
+    TRANSACTION_FAILED: 'DB_TRANSACTION_FAILED',
+    DATA_INTEGRITY: 'DB_DATA_INTEGRITY'
+};
+
 export class DatabaseError extends Error {
-    constructor(type, details = {}, cause = null) {
-        const errorType = DatabaseErrorTypes[type];
-        const message = `${errorType.emoji} ${errorType.message}: ${details.message || ''}`;
-        
+    constructor(message, code, context = {}) {
         super(message);
         this.name = 'DatabaseError';
-        this.code = errorType.code;
-        this.type = type;
-        this.details = details;
-        this.cause = cause;
+        this.code = code;
+        this.context = context;
         this.timestamp = new Date();
-    }
-
-    static handle(error, context = {}) {
-        // Format the error for logging
-        const formattedError = {
-            type: error.type || 'UNKNOWN',
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            timestamp: error.timestamp || new Date(),
-            context: context,
-            stack: error.stack
-        };
-
-        // Get user-friendly message
-        const userMessage = this.getUserMessage(error);
-
-        return {
-            error: formattedError,
-            userMessage: userMessage,
-            logMessage: this.getLogMessage(formattedError)
-        };
-    }
-
-    static getUserMessage(error) {
-        const errorType = DatabaseErrorTypes[error.type];
-        if (!errorType) return '❌ An unexpected error occurred';
-
-        return `${errorType.emoji} ${error.details.userMessage || errorType.message}`;
-    }
-
-    static getLogMessage(formattedError) {
-        return `[${formattedError.type}] ${formattedError.message}\n` +
-               `Details: ${JSON.stringify(formattedError.details)}\n` +
-               `Context: ${JSON.stringify(formattedError.context)}`;
-    }
-
-    static isOperational(error) {
-        return error instanceof DatabaseError && 
-               Object.keys(DatabaseErrorTypes).includes(error.type);
     }
 }
 

@@ -1,4 +1,6 @@
-const coins = require('./Economy/coins.js');  // Updated path to correct folder
+import { SlashCommandBuilder } from '@discordjs/builders';
+// Remove incorrect import
+// import { coinsCommand } from './Economy/coins.js';
 
 export const baseCommands = [
     {
@@ -226,4 +228,13 @@ export const categories = [
     'Items',
     'Support',
     'Admin'
+];
+
+export const commands = [
+    {
+        name: 'coins',
+        description: 'Manage your coins',
+        // ...rest of coins command configuration
+    },
+    // ... other commands
 ];

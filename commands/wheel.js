@@ -1,6 +1,4 @@
-// New command file for spinning the wheel (example)
-
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { dbManager } from '../db/database.js';
 
 export const data = new SlashCommandBuilder()

@@ -1,7 +1,12 @@
 import { SlashCommandBuilder } from 'discord.js';
 import BaseCommand from '../base-command.js';
-import { ErrorHandler } from '../utils/errorHandler.js';
-import { DatabaseError } from '../db/errors/DatabaseError.js';
+import { dbManager } from '../db/database.js';
+import { DatabaseError } from '../db/errors/DatabaseError.js'; // Use centralized error
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default class ExampleCommand extends BaseCommand {
     constructor() {

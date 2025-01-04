@@ -1,19 +1,27 @@
-import { SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
-import { dbManager } from '../../db/database.js';
-import { validateDate } from '../../utils/validation.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { PermissionFlagsBits } from 'discord.js';
+import { resolveImportPath } from '../../utils/paths.js';
+import { dbManager } from resolveImportPath('../../db/database.js');
+import { ErrorHandler } from resolveImportPath('../../utils/errorHandler.js');
+import BaseCommand from '../base-command.js';
 
-const adminCommand = {
-    data: new SlashCommandBuilder()
-        .setName('admin')
-        .setDescription('Admin commands')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('give')
-                .setDescription('Give items or coins to a user')
-                .addUserOption(option => option.setName('user').setDescription('The user to give to').setRequired(true))
-                .addStringOption(option => 
-                    option.setName('type')
+export default class AdminCommand extends BaseCommand {
+    constructor() {
+        super();
+        this.data = new SlashCommandBuilder()
+            .setName('admin')
+            .setDescription('Admin commands')
+            .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('give')
+                    .setDescription('Give items or coins to a user')
+                    .addUserOption(option => 
+                        option.setName('user')
+                        .setDescription('The user to give to')
+                        .setRequired(true))
+                    .addStringOption(option => 
+                        option.setName('type')
                         .setDescription('What to give')
                         .setRequired(true)
                         .addChoices(
@@ -21,266 +29,271 @@ const adminCommand = {
                             { name: 'Item', value: 'item' },
                             { name: 'Car', value: 'car' }
                         ))
-                .addIntegerOption(option => option.setName('amount').setDescription('Amount to give').setRequired(true))
-                .addIntegerOption(option => option.setName('id').setDescription('Item/Car ID (if giving item/car)'))
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('remove')
-                .setDescription('Remove items or coins from a user')
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('The user to remove from')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('type')
-                        .setDescription('What to remove')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Coins', value: 'coins' },
-                            { name: 'Item', value: 'item' },
-                            { name: 'Car', value: 'car' }
-                        ))
-                .addIntegerOption(option =>
-                    option.setName('amount')
-                        .setDescription('Amount to remove')
-                        .setRequired(true))
-                .addIntegerOption(option =>
-                    option.setName('id')
-                        .setDescription('Item/Car ID (if removing item/car)')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('reset')
-                .setDescription('Reset a user\'s data')
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('The user to reset')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('type')
-                        .setDescription('What to reset')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'All', value: 'all' },
-                            { name: 'Inventory', value: 'inventory' },
-                            { name: 'Balance', value: 'balance' }
-                        )))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('stats')
-                .setDescription('View server or user statistics')
-                .addStringOption(option =>
-                    option.setName('type')
-                        .setDescription('Stats type')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Server Economy', value: 'economy' },
-                            { name: 'Active Users', value: 'active' },
-                            { name: 'Top Items', value: 'items' }
-                        )))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('config')
-                .setDescription('Configure server settings')
-                .addStringOption(option =>
-                    option.setName('setting')
-                        .setDescription('Setting to modify')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Starting Balance', value: 'startbal' },
-                            { name: 'Daily Reward', value: 'daily' },
-                            { name: 'Item Drop Rate', value: 'droprate' }
-                        ))
-                .addIntegerOption(option =>
-                    option.setName('value')
-                        .setDescription('New value')
+                    .addIntegerOption(option => 
+                        option.setName('amount')
+                        .setDescription('Amount to give')
                         .setRequired(true)))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('ban')
-                .setDescription('Ban user from bot commands')
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('User to ban')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('reason')
-                        .setDescription('Reason for ban')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('logs')
-                .setDescription('View bot activity logs')
-                .addStringOption(option =>
-                    option.setName('type')
-                        .setDescription('Log type')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Commands', value: 'commands' },
-                            { name: 'Transactions', value: 'transactions' },
-                            { name: 'Errors', value: 'errors' }
-                        ))
-                .addIntegerOption(option =>
-                    option.setName('limit')
-                        .setDescription('Number of entries')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('maintenance')
-                .setDescription('Toggle maintenance mode')
-                .addBooleanOption(option =>
-                    option.setName('enabled')
-                        .setDescription('Enable/disable maintenance mode')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('message')
-                        .setDescription('Maintenance message')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('wipe')
-                .setDescription('Wipe inactive users')
-                .addIntegerOption(option =>
-                    option.setName('days')
-                        .setDescription('Days of inactivity')
-                        .setRequired(true))
-                .addBooleanOption(option =>
-                    option.setName('confirm')
-                        .setDescription('Confirm wipe')
-                        .setRequired(true)))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('backup')
-                .setDescription('Create or restore database backup')
-                .addStringOption(option =>
-                    option.setName('action')
-                        .setDescription('Backup action')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Create', value: 'create' },
-                            { name: 'Restore', value: 'restore' }
-                        ))
-                .addStringOption(option =>
-                    option.setName('filename')
-                        .setDescription('Backup filename (for restore)')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('schedule')
-                .setDescription('Schedule maintenance window')
-                .addStringOption(option =>
-                    option.setName('start')
-                        .setDescription('Start time (ISO format)')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('end')
-                        .setDescription('End time (ISO format)')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('reason')
-                        .setDescription('Maintenance reason')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('dashboard')
-                .setDescription('View admin dashboard statistics')
-                .addStringOption(option =>
-                    option.setName('view')
-                        .setDescription('Dashboard view')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Overview', value: 'overview' },
-                            { name: 'Economy', value: 'economy' },
-                            { name: 'Commands', value: 'commands' },
-                            { name: 'System', value: 'system' }
-                        )))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('mute')
-                .setDescription('Mute a user')
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('User to mute')
-                        .setRequired(true))
-                .addStringOption(option =>
-                    option.setName('reason')
-                        .setDescription('Reason for mute')))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('unmute')
-                .setDescription('Unmute a user')
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('User to unmute')
-                        .setRequired(true)))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('godmode')
-                .setDescription('Toggle god mode for an admin')
-                .addUserOption(option =>
-                    option.setName('target')
-                        .setDescription('The admin to toggle god mode for')
-                        .setRequired(true)))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('sync')
-                .setDescription('Sync various systems')
-                .addStringOption(option =>
-                    option.setName('system')
-                        .setDescription('System to sync')
-                        .setRequired(true)
-                        .addChoices(
-                            { name: 'Economy', value: 'economy' },
-                            { name: 'Tickets', value: 'tickets' },
-                            { name: 'Database', value: 'database' }
-                        ))),
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('remove')
+                    .setDescription('Remove items or coins from a user')
+                    .addUserOption(option =>
+                        option.setName('user')
+                            .setDescription('The user to remove from')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('type')
+                            .setDescription('What to remove')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Coins', value: 'coins' },
+                                { name: 'Item', value: 'item' },
+                                { name: 'Car', value: 'car' }
+                            ))
+                    .addIntegerOption(option =>
+                        option.setName('amount')
+                            .setDescription('Amount to remove')
+                            .setRequired(true))
+                    .addIntegerOption(option =>
+                        option.setName('id')
+                            .setDescription('Item/Car ID (if removing item/car)')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('reset')
+                    .setDescription('Reset a user\'s data')
+                    .addUserOption(option =>
+                        option.setName('user')
+                            .setDescription('The user to reset')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('type')
+                            .setDescription('What to reset')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'All', value: 'all' },
+                                { name: 'Inventory', value: 'inventory' },
+                                { name: 'Balance', value: 'balance' }
+                            )))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('stats')
+                    .setDescription('View server or user statistics')
+                    .addStringOption(option =>
+                        option.setName('type')
+                            .setDescription('Stats type')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Server Economy', value: 'economy' },
+                                { name: 'Active Users', value: 'active' },
+                                { name: 'Top Items', value: 'items' }
+                            )))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('config')
+                    .setDescription('Configure server settings')
+                    .addStringOption(option =>
+                        option.setName('setting')
+                            .setDescription('Setting to modify')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Starting Balance', value: 'startbal' },
+                                { name: 'Daily Reward', value: 'daily' },
+                                { name: 'Item Drop Rate', value: 'droprate' }
+                            ))
+                    .addIntegerOption(option =>
+                        option.setName('value')
+                            .setDescription('New value')
+                            .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('ban')
+                    .setDescription('Ban user from bot commands')
+                    .addUserOption(option =>
+                        option.setName('user')
+                            .setDescription('User to ban')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('reason')
+                            .setDescription('Reason for ban')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('logs')
+                    .setDescription('View bot activity logs')
+                    .addStringOption(option =>
+                        option.setName('type')
+                            .setDescription('Log type')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Commands', value: 'commands' },
+                                { name: 'Transactions', value: 'transactions' },
+                                { name: 'Errors', value: 'errors' }
+                            ))
+                    .addIntegerOption(option =>
+                        option.setName('limit')
+                            .setDescription('Number of entries')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('maintenance')
+                    .setDescription('Toggle maintenance mode')
+                    .addBooleanOption(option =>
+                        option.setName('enabled')
+                            .setDescription('Enable/disable maintenance mode')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('message')
+                            .setDescription('Maintenance message')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('wipe')
+                    .setDescription('Wipe inactive users')
+                    .addIntegerOption(option =>
+                        option.setName('days')
+                            .setDescription('Days of inactivity')
+                            .setRequired(true))
+                    .addBooleanOption(option =>
+                        option.setName('confirm')
+                            .setDescription('Confirm wipe')
+                            .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('backup')
+                    .setDescription('Create or restore database backup')
+                    .addStringOption(option =>
+                        option.setName('action')
+                            .setDescription('Backup action')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Create', value: 'create' },
+                                { name: 'Restore', value: 'restore' }
+                            ))
+                    .addStringOption(option =>
+                        option.setName('filename')
+                            .setDescription('Backup filename (for restore)')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('schedule')
+                    .setDescription('Schedule maintenance window')
+                    .addStringOption(option =>
+                        option.setName('start')
+                            .setDescription('Start time (ISO format)')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('end')
+                            .setDescription('End time (ISO format)')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('reason')
+                            .setDescription('Maintenance reason')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('dashboard')
+                    .setDescription('View admin dashboard statistics')
+                    .addStringOption(option =>
+                        option.setName('view')
+                            .setDescription('Dashboard view')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Overview', value: 'overview' },
+                                { name: 'Economy', value: 'economy' },
+                                { name: 'Commands', value: 'commands' },
+                                { name: 'System', value: 'system' }
+                            )))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('mute')
+                    .setDescription('Mute a user')
+                    .addUserOption(option =>
+                        option.setName('user')
+                            .setDescription('User to mute')
+                            .setRequired(true))
+                    .addStringOption(option =>
+                        option.setName('reason')
+                            .setDescription('Reason for mute')))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('unmute')
+                    .setDescription('Unmute a user')
+                    .addUserOption(option =>
+                        option.setName('user')
+                            .setDescription('User to unmute')
+                            .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('godmode')
+                    .setDescription('Toggle god mode for an admin')
+                    .addUserOption(option =>
+                        option.setName('target')
+                            .setDescription('The admin to toggle god mode for')
+                            .setRequired(true)))
+            .addSubcommand(subcommand =>
+                subcommand
+                    .setName('sync')
+                    .setDescription('Sync various systems')
+                    .addStringOption(option =>
+                        option.setName('system')
+                            .setDescription('System to sync')
+                            .setRequired(true)
+                            .addChoices(
+                                { name: 'Economy', value: 'economy' },
+                                { name: 'Tickets', value: 'tickets' },
+                                { name: 'Database', value: 'database' }
+                            )));
 
-    execute: async (interaction) => {
-        if (!await checkAdminPermissions(interaction)) return;
+        this.category = 'Admin';
+        this.permissions = ['Administrator'];
 
-        // Only check rate limit if user doesn't have bypass permission
-        if (!interaction.bypassRateLimit) {
-            const canExecute = await dbManager.checkRateLimit(
-                interaction.user.id,
-                'admin',
-                5,
-                10
-            );
+        this.execute = async (interaction) => {
+            if (!await checkAdminPermissions(interaction)) return;
 
-            if (!canExecute) {
-                await interaction.reply({
-                    content: 'Command rate limit exceeded. Please wait before trying again.',
-                    ephemeral: true
-                });
-                return;
+            // Only check rate limit if user doesn't have bypass permission
+            if (!interaction.bypassRateLimit) {
+                const canExecute = await dbManager.checkRateLimit(
+                    interaction.user.id,
+                    'admin',
+                    5,
+                    10
+                );
+
+                if (!canExecute) {
+                    await interaction.reply({
+                        content: 'Command rate limit exceeded. Please wait before trying again.',
+                        ephemeral: true
+                    });
+                    return;
+                }
             }
-        }
 
-        const subcommand = interaction.options.getSubcommand();
-        const user = interaction.options.getUser('user');
-        const type = interaction.options.getString('type');
+            const subcommand = interaction.options.getSubcommand();
+            const user = interaction.options.getUser('user');
+            const type = interaction.options.getString('type');
 
-        try {
-            const handlers = {
-                give: handleGive,
-                remove: handleRemove,
-                reset: handleReset,
-                stats: handleStats,
-                config: handleConfig,
-                ban: handleBan,
-                logs: handleLogs,
-                maintenance: handleMaintenance,
-                wipe: handleWipe,
-                backup: handleBackup,
-                schedule: handleScheduleMaintenance,
-                dashboard: handleDashboard,
-                mute: handleMute,
-                unmute: handleUnmute,
-                godmode: handleGodmode,
-                sync: handleSync
-            };
+            try {
+                const handlers = {
+                    give: handleGive,
+                    remove: handleRemove,
+                    reset: handleReset,
+                    stats: handleStats,
+                    config: handleConfig,
+                    ban: handleBan,
+                    logs: handleLogs,
+                    maintenance: handleMaintenance,
+                    wipe: handleWipe,
+                    backup: handleBackup,
+                    schedule: handleScheduleMaintenance,
+                    dashboard: handleDashboard,
+                    mute: handleMute,
+                    unmute: handleUnmute,
+                    godmode: handleGodmode,
+                    sync: handleSync
+                };
 
-            await handlers[subcommand](interaction, user, type);
-        } catch (error) {
-            await handleError(interaction, error);
-        }
+                await handlers[subcommand](interaction, user, type);
+            } catch (error) {
+                await handleError(interaction, error);
+            }
+        };
     }
-};
+}
 
 async function checkAdminPermissions(interaction) {
     const hasPermission = await dbManager.checkAdminPermission(
@@ -626,5 +639,3 @@ async function handleError(interaction, error) {
         ephemeral: true
     });
 }
-
-export default adminCommand;

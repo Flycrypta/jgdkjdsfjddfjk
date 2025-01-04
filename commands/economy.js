@@ -1,8 +1,8 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { Logger } from '../utils/logger.js';
 import { WHEEL_ITEMS, WHEEL_TYPES } from '../utils/index.js'; // Import wheel items
-import { Database } from '../../database/database.js';
-import { DatabaseError } from '../../db/errors/DatabaseError.js';
+import { DatabaseError } from '../db/errors/DatabaseError.js';
+import { db } from './database.js';
 
 const log = new Logger('EconomyCommand');
 

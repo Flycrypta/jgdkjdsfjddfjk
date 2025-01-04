@@ -1,0 +1,7 @@
+Host DiscordVPS
+    HostName 172.86.108.64
+    User discord_bot
+    IdentityFile ~/.ssh/discord_bot_rsa
+    Port 22
+    ServerAliveInterval 60
+    ServerAliveCountMax 3

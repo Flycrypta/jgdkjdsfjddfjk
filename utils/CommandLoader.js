@@ -3,12 +3,13 @@ import { readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export class CommandLoader {
     static async loadCommands() {
         const commands = new Collection();
-        const commandsPath = join(__dirname, '..', 'commands');
+        const commandsPath = join(dirname(__dirname), 'commands');
         
         try {
             const commandFiles = readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -25,6 +26,17 @@ export class CommandLoader {
             return commands;
         } catch (error) {
             console.error('Error loading commands:', error);
+            throw error;
+        }
+    }
+
+    static async reloadCommands() {
+        try {
+            const commands = await this.loadCommands();
+            console.log('Commands reloaded successfully');
+            return commands;
+        } catch (error) {
+            console.error('Error reloading commands:', error);
             throw error;
         }
     }

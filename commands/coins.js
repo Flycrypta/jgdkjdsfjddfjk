@@ -1,7 +1,12 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { Database } from '../../database/database.js';
-import { DatabaseError } from '../../db/errors/DatabaseError.js';
+import { dbManager } from '../db/database.js';
+import { DatabaseError } from '../db/errors/DatabaseError.js';
 import { Logger } from '../utils/logger.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const log = new Logger('CoinsCommand');
 

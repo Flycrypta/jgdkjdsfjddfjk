@@ -368,6 +368,15 @@ function calculateWinProbability(playerCar, opponentCar) {
 
 const getLuxuryItems = () => getCategoryItems('LUXURY_ITEMS');
 
+function generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
 const client = new Client({ 
     intents: [
         Discord.GatewayIntentBits.Guilds,
@@ -542,7 +551,8 @@ export {
     generateUniqueId,
     formatCurrency,
     calculateWinProbability,
-    getLuxuryItems
+    getLuxuryItems,
+    generateRandomString
 };
 
 export function setActivity(client, activity) {
@@ -550,6 +560,10 @@ export function setActivity(client, activity) {
         client.user.setActivity(activity);
     }
 }
+
+// Export items and homes once
+export { CARS } from './items/cars.js';
+export { HOMES } from './items/homes.js';
 
 
 

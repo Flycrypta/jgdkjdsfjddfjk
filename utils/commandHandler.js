@@ -128,4 +128,13 @@ export class CommandHandler {
         }
         return false;
     }
+
+    unregisterCommand(commandName) {
+        if (this.commands.has(commandName)) {
+            this.commands.delete(commandName);
+            console.log(`Command ${commandName} unregistered successfully`);
+            return true;
+        }
+        return false;
+    }
 }

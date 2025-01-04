@@ -4,7 +4,6 @@ export class TransactionManager {
     constructor(db, logger) {
         this.db = db;
         this.logger = logger;
-        this.monitor = new DatabaseMonitor(logger);
         this.activeTransactions = new Map();
         this.transactionQueue = [];
         this.isProcessing = false;

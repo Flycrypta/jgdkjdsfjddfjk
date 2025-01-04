@@ -1,4 +1,4 @@
-import { copyFile, unlink, readdir } from 'fs/promises';
+import { copyFile, unlink, readdir, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { Logger } from '../../utils/logger.js';
 
@@ -11,6 +11,27 @@ export class BackupManager {
         this.maxBackups = options.maxBackups || 5;
         this.backupInterval = options.backupInterval || 24 * 60 * 60 * 1000; // 24 hours
         this.lastBackup = null;
+    }
+
+    async startScheduledBackups() {
+        await this.createBackupDir();
+        
+        setInterval(async () => {
+            try {
+                await this.createBackup();
+                log.info('Scheduled backup completed');
+            } catch (error) {
+                log.error('Scheduled backup failed:', error);
+            }
+        }, this.backupInterval);
+    }
+
+    async createBackupDir() {
+        try {
+            await mkdir(this.backupDir, { recursive: true });
+        } catch (error) {
+            log.error('Failed to create backup directory:', error);
+        }
     }
 
     async createBackup() {

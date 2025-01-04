@@ -5,81 +5,85 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// Load environment variables
 config();
 
-// Validate environment variables
-const requiredEnvVars = ['DISCORD_TOKEN', 'CLIENT_ID', 'GUILD_ID'];
-const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
-if (missingEnvVars.length > 0) {
-    console.error('Missing required environment variables:', missingEnvVars.join(', '));
-    console.error('Please check your .env file and ensure all required variables are set.');
+// Validate environment variables
+if (!DISCORD_TOKEN || !CLIENT_ID) {
+    console.error('Missing required environment variables:');
+    if (!DISCORD_TOKEN) console.error('- DISCORD_TOKEN');
+    if (!CLIENT_ID) console.error('- CLIENT_ID');
     process.exit(1);
 }
 
-async function validateCommand(command) {
-    if (!command || !command.data) {
-        throw new Error('Invalid command structure');
-    }
-    
-    const requiredFields = ['name', 'description'];
-    for (const field of requiredFields) {
-        if (!command.data[field]) {
-            throw new Error(`Command missing required field: ${field}`);
-        }
-    }
-}
+const commands = [];
+const foldersPath = join(__dirname, '..', 'commands');
 
-async function deployCommands() {
-    try {
-        const commands = [];
-        const commandsPath = join(__dirname, '..', 'commands');
+try {
+    // Recursively get all command files
+    const getCommands = async (dir) => {
+        const files = readdirSync(dir, { withFileTypes: true });
         
-        if (!readdirSync(commandsPath)) {
-            throw new Error('Commands directory not found');
-        }
+        for (const file of files) {
+            const filePath = join(dir, file.name);
+            
+            if (file.isDirectory()) {
+                await getCommands(filePath);
+                continue;
+            }
 
-        const commandFiles = readdirSync(commandsPath)
-            .filter(file => file.endsWith('.js'))
-            .filter(file => !['base-command.js', 'command-template.js'].includes(file));
-        
-        console.log(`Loading ${commandFiles.length} command files...`);
-        
-        for (const file of commandFiles) {
-            const filePath = `file://${join(commandsPath, file)}`;
+            if (!file.name.endsWith('.js')) continue;
+
             try {
-                const command = await import(filePath);
-                if (command.data) {
-                    await validateCommand(command);
-                    commands.push(command.data.toJSON());
-                    console.log(`✓ Loaded command: ${command.data.name}`);
+                const command = await import(`file://${filePath}`);
+                if (command?.default?.data && command?.default?.execute) {
+                    commands.push(command.default.data.toJSON());
+                    console.log(`Loaded command: ${command.default.data.name}`);
                 }
             } catch (error) {
-                console.error(`× Failed to load command ${file}:`, error.message);
+                console.log(`[WARNING] Error loading command ${filePath}: ${error}`);
             }
         }
+    };
 
-        if (commands.length === 0) {
-            throw new Error('No valid commands found to deploy');
+    await getCommands(foldersPath);
+
+    const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+    
+    console.log(`Starting deployment for Application ID: ${CLIENT_ID}`);
+    console.log(`Deploying ${commands.length} commands...`);
+
+    // Try guild-specific deployment first if GUILD_ID is available
+    if (GUILD_ID) {
+        try {
+            await rest.put(
+                Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+                { body: commands },
+            );
+            console.log('Successfully deployed commands to guild!');
+            process.exit(0);
+        } catch (error) {
+            console.warn('Guild deployment failed, falling back to global deployment:', error.message);
         }
+    }
 
-        const rest = new REST().setToken(process.env.DISCORD_TOKEN);
-
-        console.log(`Deploying ${commands.length} commands...`);
-
-        const data = await rest.put(
-            Routes.applicationCommands(process.env.CLIENT_ID),
+    // Global deployment
+    try {
+        await rest.put(
+            Routes.applicationCommands(CLIENT_ID),
             { body: commands },
         );
-
-        console.log(`Successfully deployed ${data.length} commands!`);
-        return true;
+        console.log('Successfully deployed commands globally!');
     } catch (error) {
-        console.error('Deployment failed:', error.message);
-        return false;
+        if (error.code === 10002) {
+            console.error('Error: Invalid application ID. Please check your CLIENT_ID in .env');
+        } else {
+            console.error('Error deploying commands:', error);
+        }
+        process.exit(1);
     }
+} catch (error) {
+    console.error('Error:', error);
+    process.exit(1);
 }
-
-deployCommands().then(success => process.exit(success ? 0 : 1));

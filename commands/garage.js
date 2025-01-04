@@ -1,8 +1,9 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { dbManager } from '../db/database.js';
 import { CAR_MODS } from '../utils/index.js';
-import { Database } from '../../database/database.js';
-import { DatabaseError } from '../../db/errors/DatabaseError.js';
+// Ensure the correct import path for DatabaseError
+// import { DatabaseError } from '../db/errors/DatabaseError.js';
+import { db } from './database.js';
 
 function checkGarageAccess(user) {
     return user.unlockedCars.length >= 5 && user.status === 'dealership';

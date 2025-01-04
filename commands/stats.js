@@ -1,26 +1,19 @@
-import { EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { dbManager } from '../db/database.js';
+import path from 'path';
 
-export default {
-    name: 'stats',
-    description: 'View your game statistics',
-    async execute(interaction) {
-        const userId = interaction.user.id;
-        
-        try {
-            const stats = await dbManager.getUserStats(userId);
-            const embed = new EmbedBuilder()
-                .setTitle('Your Stats')
-                .setDescription(`Stats for ${interaction.user.username}`)
-                .addFields(
-                    { name: 'Total Spins', value: stats.total_spins.toString(), inline: true },
-                    { name: 'Total Rewards', value: stats.total_rewards.toString(), inline: true },
-                    { name: 'Highest Reward', value: stats.highest_reward.toString(), inline: true }
-                );
+export const data = new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('Shows statistics');
 
-            await interaction.reply({ embeds: [embed] });
-        } catch (error) {
-            await interaction.reply('Error fetching stats: ' + error.message);
-        }
+export async function execute(interaction) {
+    try {
+        const stats = await dbManager.getStats();
+        await interaction.reply(`Bot statistics: ${JSON.stringify(stats)}`);
+    } catch (error) {
+        console.error('Error executing stats command:', error);
+        await interaction.reply('Failed to retrieve statistics.');
     }
-};
+}
+
+export default { data, execute };

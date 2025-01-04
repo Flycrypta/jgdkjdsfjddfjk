@@ -2,8 +2,11 @@ import { SlashCommandBuilder } from 'discord.js';
 import { EmbedBuilder } from 'discord.js';
 import { dbManager } from '../db/database.js';
 import { createEmbed } from '../utils/embedStyles.js';
-import { Database } from '../../database/database.js';
-import { DatabaseError } from '../../db/errors/DatabaseError.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export const auctionCommands = {
     data: new SlashCommandBuilder()

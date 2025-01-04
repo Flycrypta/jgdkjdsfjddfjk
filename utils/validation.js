@@ -38,3 +38,33 @@ export function validateBackupFile(filename) {
         return false;
     }
 }
+
+export function validateEmail(email) {
+    try {
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
+    } catch (error) {
+        console.error('Error validating email:', error);
+        return false;
+    }
+}
+
+export function validateCommand(command) {
+    if (!command?.data) {
+        throw new Error('Command is missing data property');
+    }
+    
+    if (!command.data.name) {
+        throw new Error('Command is missing name');
+    }
+    
+    if (!command.data.description) {
+        throw new Error('Command is missing description');
+    }
+    
+    if (typeof command.execute !== 'function') {
+        throw new Error('Command is missing execute function');
+    }
+    
+    return true;
+}

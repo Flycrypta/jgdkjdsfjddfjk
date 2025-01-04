@@ -1,0 +1,20 @@
+{
+    "vps_instances": [
+        {
+            "id": "vps1",
+            "hostname": "server1",
+            "status": "running",
+            "specs": {
+                "cpu": "2 cores",
+                "ram": "4GB",
+                "storage": "50GB SSD"
+            },
+            "last_sync": "2024-01-01T12:00:00Z",
+            "provider": "provider_name"
+        }
+    ],
+    "sync_status": {
+        "last_sync_timestamp": "2024-01-01T12:00:00Z",
+        "sync_successful": true
+    }
+}

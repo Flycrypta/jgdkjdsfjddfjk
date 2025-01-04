@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from '@discordjs/builders';
 import { Logger } from '../utils/logger.js';
 import { ErrorHandler } from '../utils/errorHandler.js';
 
-export default class BaseCommand {
+export class BaseCommand {
     constructor() {
         this.data = new SlashCommandBuilder();
         this.logger = new Logger(this.constructor.name);
@@ -15,6 +15,12 @@ export default class BaseCommand {
     }
 
     async handleError(interaction, error) {
-        await ErrorHandler.handle(error, interaction);
+        console.error(`Command error: ${error.message}`);
+        await interaction.reply({ 
+            content: 'An error occurred while executing this command.',
+            ephemeral: true
+        });
     }
 }
+
+export default BaseCommand;

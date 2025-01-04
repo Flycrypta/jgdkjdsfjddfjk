@@ -1,9 +1,10 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder } from 'discord.js';
 
-module.exports = {
+const command = {
     data: new SlashCommandBuilder()
         .setName('requestadmin')
         .setDescription('Request admin roles from the server owner'),
+    
     async execute(interaction) {
         const owner = interaction.guild.ownerId;
         const user = interaction.user;
@@ -13,5 +14,7 @@ module.exports = {
         await ownerUser.send(`${user.username} has requested admin roles.`);
 
         await interaction.reply({ content: 'Your request for admin roles has been sent to the server owner.', ephemeral: true });
-    },
+    }
 };
+
+export default command;

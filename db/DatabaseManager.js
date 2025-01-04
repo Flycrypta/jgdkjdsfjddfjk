@@ -19,7 +19,7 @@ export class DatabaseManager {
 
     setupQueueListeners() {
         this.queueManager.on('queued', ({ queueName, queueSize }) => {
-            log.debug(`Added to queue ${queueName}, size: ${queueSize}`);
+            log.debug(`Added to queue ${queueName, size: ${queueSize}`);
         });
 
         this.queueManager.on('batchProcessed', ({ queueName, batchSize, results }) => {
@@ -46,6 +46,66 @@ export class DatabaseManager {
             log.error('Failed to initialize database:', error);
             throw error;
         }
+    }
+
+    async initializeWithRetry(maxRetries = 3) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                await this.initialize();
+                return;
+            } catch (error) {
+                this.logger.warn(`Database initialization attempt ${i + 1} failed:`, error);
+                if (i === maxRetries - 1) throw error;
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+    }
+
+    async executeWithRetry(operation, maxAttempts = 3) {
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return await operation();
+            } catch (error) {
+                if (error.code === 'SQLITE_BUSY' && attempt < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+                    continue;
+                }
+                throw error;
+            }
+        }
+    }
+
+    async verifyDatabaseIntegrity() {
+        const result = await this.executeQuery('PRAGMA integrity_check');
+        return result.integrity_check === 'ok';
+    }
+
+    async initializeDatabaseWithRetry(maxRetries = 3) {
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                await this.initialize();
+                return;
+            } catch (error) {
+                this.logger.warn(`Database initialization attempt ${i + 1} failed:`, error);
+                if (i === maxRetries - 1) throw error;
+                await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+            }
+        }
+    }
+
+    async handleDatabaseError(error, operation) {
+        this.logger.error(`Database error during ${operation}:`, error);
+        
+        if (error.code === 'SQLITE_CORRUPT') {
+            await this.backupManager.restoreLatestBackup();
+        }
+        
+        if (error.code === 'SQLITE_BUSY') {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return true; // Retry operation
+        }
+
+        return false; // Don't retry
     }
 
     async runMigrations() {

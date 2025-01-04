@@ -1,5 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { dbManager } from '../../db/database.js';
+import { resolveImportPath } from '../../utils/paths.js';
+import { dbManager } from resolveImportPath('../../db/database.js');
+import BaseCommand from resolveImportPath('../base-command.js');
+import { CAR_MODS } from resolveImportPath('../../utils/index.js');
 
 const serviceTypes = {
     basic: {
@@ -51,67 +54,73 @@ export const data = new SlashCommandBuilder()
             .setDescription('ID of the car to service')
             .setRequired(true));
 
-export async function execute(interaction) {
-    const type = interaction.options.getString('type');
-    const carId = interaction.options.getInteger('car_id');
-    const userId = interaction.user.id;
+export default class ServiceCommand extends BaseCommand {
+    constructor() {
+        super();
+    }
 
-    try {
-        // Check if user owns the car
-        const car = await dbManager.getUserCar(userId, carId);
-        if (!car) {
-            return await interaction.reply({ content: 'You don\'t own this car!', ephemeral: true });
-        }
+    async execute(interaction) {
+        const type = interaction.options.getString('type');
+        const carId = interaction.options.getInteger('car_id');
+        const userId = interaction.user.id;
 
-        const service = serviceTypes[type];
+        try {
+            // Check if user owns the car
+            const car = await dbManager.getUserCar(userId, carId);
+            if (!car) {
+                return await interaction.reply({ content: 'You don\'t own this car!', ephemeral: true });
+            }
 
-        // Check cooldown
-        const lastService = await dbManager.getLastService(carId);
-        if (lastService) {
-            const hoursSinceService = (Date.now() - lastService.timestamp) / (1000 * 60 * 60);
-            if (hoursSinceService < service.cooldown) {
+            const service = serviceTypes[type];
+
+            // Check cooldown
+            const lastService = await dbManager.getLastService(carId);
+            if (lastService) {
+                const hoursSinceService = (Date.now() - lastService.timestamp) / (1000 * 60 * 60);
+                if (hoursSinceService < service.cooldown) {
+                    return await interaction.reply({
+                        content: `This car was recently serviced. Wait ${Math.ceil(service.cooldown - hoursSinceService)} hours.`,
+                        ephemeral: true
+                    });
+                }
+            }
+
+            // Check if user can afford it
+            const userBalance = await dbManager.getCoins(userId);
+            if (userBalance < service.cost) {
                 return await interaction.reply({
-                    content: `This car was recently serviced. Wait ${Math.ceil(service.cooldown - hoursSinceService)} hours.`,
+                    content: `You need ${service.cost} coins for this service. Current balance: ${userBalance}`,
                     ephemeral: true
                 });
             }
-        }
 
-        // Check if user can afford it
-        const userBalance = await dbManager.getCoins(userId);
-        if (userBalance < service.cost) {
-            return await interaction.reply({
-                content: `You need ${service.cost} coins for this service. Current balance: ${userBalance}`,
+            // Perform service
+            await dbManager.serviceCarTransaction(userId, carId, {
+                cost: service.cost,
+                effects: service.effects,
+                type: type
+            });
+
+            const embed = new EmbedBuilder()
+                .setTitle('🔧 Car Service Complete')
+                .setDescription(`Your ${car.name} has been serviced!`)
+                .addFields(
+                    { name: 'Service Type', value: service.name },
+                    { name: 'Cost', value: `${service.cost} coins` },
+                    { name: 'Effects', value: `Performance: +${Math.round((service.effects.performance - 1) * 100)}%\nReliability: +${Math.round((service.effects.reliability - 1) * 100)}%` },
+                    { name: 'Duration', value: `${service.effects.duration} hours` }
+                )
+                .setColor('#00FF00')
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+
+        } catch (error) {
+            console.error('Service error:', error);
+            await interaction.reply({
+                content: 'There was an error servicing your car.',
                 ephemeral: true
             });
         }
-
-        // Perform service
-        await dbManager.serviceCarTransaction(userId, carId, {
-            cost: service.cost,
-            effects: service.effects,
-            type: type
-        });
-
-        const embed = new EmbedBuilder()
-            .setTitle('🔧 Car Service Complete')
-            .setDescription(`Your ${car.name} has been serviced!`)
-            .addFields(
-                { name: 'Service Type', value: service.name },
-                { name: 'Cost', value: `${service.cost} coins` },
-                { name: 'Effects', value: `Performance: +${Math.round((service.effects.performance - 1) * 100)}%\nReliability: +${Math.round((service.effects.reliability - 1) * 100)}%` },
-                { name: 'Duration', value: `${service.effects.duration} hours` }
-            )
-            .setColor('#00FF00')
-            .setTimestamp();
-
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-
-    } catch (error) {
-        console.error('Service error:', error);
-        await interaction.reply({
-            content: 'There was an error servicing your car.',
-            ephemeral: true
-        });
     }
 }

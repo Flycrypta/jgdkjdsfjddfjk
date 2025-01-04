@@ -18,16 +18,18 @@ export class DatabaseMonitor extends EventEmitter {
             error: error
         });
 
-        if (error.context?.severity === DatabaseErrorSeverity.FATAL) {
+        if (error.context?.severity === 'FATAL') {
             this.emit('fatalError', error);
         }
 
-        this.logger.error('Database Error:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            context: error.context
-        });
+        if (this.logger) {
+            this.logger.error('Database Error:', {
+                code: error.code,
+                message: error.message,
+                details: error.details,
+                context: error.context
+            });
+        }
     }
 
     getErrorStats() {

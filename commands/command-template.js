@@ -1,20 +1,11 @@
-import BaseCommand from './base-command.js';
+import { SlashCommandBuilder } from 'discord.js';
 
-export default class CommandName extends BaseCommand {
-    constructor() {
-        super();
-        this.data
-            .setName('command-name')
-            .setDescription('Command description');
-        this.category = 'Category';
-        this.cooldown = 0; // Optional cooldown in seconds
-    }
-
+export default {
+    data: new SlashCommandBuilder()
+        .setName('commandname')
+        .setDescription('Command description'),
+    
     async execute(interaction) {
-        try {
-            // Command logic here
-        } catch (error) {
-            await this.handleError(interaction, error);
-        }
+        // Command logic here
     }
-}
+};

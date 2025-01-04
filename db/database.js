@@ -1,63 +1,74 @@
 import Database from 'better-sqlite3';
 import fs from 'fs/promises';
-import path from 'path';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import { Logger } from '../utils/logger.js';
 import { QueueManager } from './managers/QueueManager.js';
-import { CacheManager } from './managers/CacheManager.js';
-import { DatabaseError, DatabaseErrorCodes } from './errors/DatabaseError.js';
-import { User } from '../models/User.js';
+import { DatabaseError } from './errors/DatabaseError.js';
+import { DB_CONFIG } from './config.js';
+import { EventEmitter } from 'events';
+import { TransactionQueue } from './managers/TransactionQueue.js';
+import mysql from 'mysql2/promise';
+import { config } from 'dotenv';
 
-import { DB_CONFIG, REQUIRED_TABLES, TABLE_SCHEMAS } from './config.js';
-import { resolveDBPath, resolveRootPath, pathToFileURL } from '../utils/paths.js';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const dataDir = join(__dirname, '..', 'data');
-const dbPath = join(dataDir, 'botData.db');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const log = new Logger('DatabaseManager');
 
-// Custom error types
-class DatabaseError extends Error {
-    constructor(message, code, query) {
-        super(message);
-        this.name = 'DatabaseError';
-        this.code = code;
-        this.query = query;
-    }
-}
+const dbPath = path.join(__dirname, '..', 'data', 'bot.db');
 
-class TransactionQueue {
-    constructor() {
-        this.queue = [];
-        this.isProcessing = false;
-    }
+const db = new Database(dbPath, DB_CONFIG);
 
-    async add(transaction) {
-        return new Promise((resolve, reject) => {
-            this.queue.push({ transaction, resolve, reject });
-            if (!this.isProcessing) {
-                this.processQueue();
-            }
+const userAssets = new Map();
+
+function initializeUser(userId) {
+    if (!userAssets.has(userId)) {
+        userAssets.set(userId, {
+            balance: 1000,
+            stocks: {},
+            crypto: {},
+            businesses: [],
+            job: null,
+            loans: [],
+            transactions: [],
+            creditScore: 700,
+            savingsGoals: [],
+            vipLevel: 'standard'
         });
     }
-
-    async processQueue() {
-        if (this.isProcessing || this.queue.length === 0) return;
-        this.isProcessing = true;
-
-        const { transaction, resolve, reject } = this.queue.shift();
-        try {
-            const result = await transaction();
-            resolve(result);
-        } catch (error) {
-            reject(error);
-        } finally {
-            this.isProcessing = false;
-            this.processQueue();
-        }
-    }
+    return userAssets.get(userId);
 }
+
+async function updateBalance(userId, amount) {
+    const user = initializeUser(userId);
+    user.balance += amount;
+    return user.balance;
+}
+
+async function addTransaction(userId, type, amount) {
+    const user = initializeUser(userId);
+    const transaction = {
+        id: Date.now(),
+        type,
+        amount,
+        timestamp: new Date().toISOString()
+    };
+    user.transactions.push(transaction);
+    return transaction;
+}
+
+async function getUserAssets(userId) {
+    return initializeUser(userId);
+}
+
+const DatabaseErrorCodes = {
+    CONNECTION_ERROR: 'CONNECTION_ERROR',
+    QUERY_ERROR: 'QUERY_ERROR',
+    INITIALIZATION_ERROR: 'INITIALIZATION_ERROR',
+    TRANSACTION_ERROR: 'TRANSACTION_ERROR',
+    VALIDATION_ERROR: 'VALIDATION_ERROR'
+};
 
 class DatabaseManager extends EventEmitter {
     constructor() {
@@ -67,21 +78,13 @@ class DatabaseManager extends EventEmitter {
         this.allCars = [];
         this.initializationPromise = this.initialize();
         this.db = null;
-        this.ensureDataDir();
-    }
-
-    async ensureDataDir() {
-        await mkdir(dataDir, { recursive: true });
     }
 
     async init() {
         return new Promise((resolve, reject) => {
             try {
                 // Use better-sqlite3 instead of sqlite3
-                this.db = new Database(dbPath, { 
-                    fileMustExist: false,
-                    verbose: process.env.NODE_ENV === 'development' ? console.log : null
-                });
+                this.db = new Database(dbPath, DB_CONFIG);
                 
                 this.db.exec(`
                     -- Server tracking
@@ -100,48 +103,60 @@ class DatabaseManager extends EventEmitter {
         });
     }
 
-    // Add method to set items and cars
-    setGameData(items, cars) {
-        this.allItems = items;
-        this.allCars = cars;
-        log.info('Game data loaded successfully');
-    }
-
     async initialize() {
         try {
-            const dbPath = resolveDBPath('bot.db');
-            const schemaPath = resolveRootPath('db', 'schema.sql');
+            this.db = new Database('./data/bot.db', {
+                verbose: process.env.DEBUG_MODE === 'true' ? console.log : null
+            });
 
-            // Ensure data directory exists
-            await fs.promises.mkdir(resolveDBPath(), { recursive: true });
+            // Enable WAL mode for better performance
+            this.db.pragma('journal_mode = WAL');
+            
+            // Create tables if they don't exist
+            this.db.exec(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id TEXT PRIMARY KEY,
+                    username TEXT NOT NULL,
+                    coins INTEGER DEFAULT 0,
+                    last_daily DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
 
-            this.db = new Database(dbPath, DB_CONFIG);
+                CREATE TABLE IF NOT EXISTS cars (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    owner_id TEXT,
+                    model TEXT NOT NULL,
+                    value INTEGER NOT NULL,
+                    modifications TEXT,
+                    FOREIGN KEY(owner_id) REFERENCES users(id)
+                );
+            `);
 
-            // Execute schema
-            const schema = await fs.promises.readFile(schemaPath, 'utf8');
-            this.db.exec(schema);
+            // Prepare common statements
+            this.statements = {
+                getUser: this.db.prepare('SELECT * FROM users WHERE id = ?'),
+                updateCoins: this.db.prepare('UPDATE users SET coins = coins + ? WHERE id = ?'),
+                addCar: this.db.prepare('INSERT INTO cars (owner_id, model, value) VALUES (?, ?, ?)')
+            };
 
-            // Verify tables
-            this.verifyTables();
-
-            // Prepare statements
-            await this.prepareStatements();
-
-            log.info('✅ Database initialized successfully');
-            return true;
+            log.info('Database initialized successfully');
         } catch (error) {
-            const dbError = new DatabaseError(
-                'Database initialization failed',
-                DatabaseErrorCodes.CONNECTION_ERROR,
-                { 
-                    originalError: error.message,
-                    dbPath: this.dbPath,
-                    stackTrace: error.stack
-                }
-            );
-            log.error(dbError);
-            throw dbError;
+            throw new DatabaseError('Failed to initialize database', { cause: error });
         }
+    }
+
+    // User methods
+    async getUser(userId) {
+        return this.statements.getUser.get(userId);
+    }
+
+    async updateCoins(userId, amount) {
+        return this.statements.updateCoins.run(amount, userId);
+    }
+
+    // Car methods
+    async addCarToUser(userId, carModel, value) {
+        return this.statements.addCar.run(userId, carModel, value);
     }
 
     verifyTables() {
@@ -217,6 +232,7 @@ class DatabaseManager extends EventEmitter {
                 last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 settings JSON,
                 godmode BOOLEAN DEFAULT FALSE,  -- Add godmode column
+                last_work_time TIMESTAMP,  -- Add last_work_time column
                 CONSTRAINT valid_multiplier CHECK (bonus_multiplier >= 1.0)
             )`,
 
@@ -1038,6 +1054,17 @@ class DatabaseManager extends EventEmitter {
             autoCloseTime: { $lte: Date.now() }
         }).toArray();
     }
+
+    async getLastWorkTime(userId) {
+        const query = 'SELECT last_work_time FROM users WHERE user_id = ?';
+        const result = await this.db.get(query, [userId]);
+        return result ? result.last_work_time : null;
+    }
+
+    async updateLastWorkTime(userId, timestamp) {
+        const query = 'UPDATE users SET last_work_time = ? WHERE user_id = ?';
+        await this.db.run(query, [timestamp, userId]);
+    }
 }
 
 const createTables = () => {
@@ -1062,3 +1089,81 @@ const createTables = () => {
 };
 
 export const dbManager = new DatabaseManager();
+
+export default db;
+
+const log = new Logger('Database');
+
+function logVPSOperation(error) {
+    // Example alternative VPS logging
+    console.warn('[VPS Error Detected]', error.message);
+}
+
+export class DatabaseManager {
+    constructor() {
+        this.localPool = null;
+        this.vpsPool = null;
+    }
+
+    async connect() {
+        try {
+            // Create local connection pool
+            this.localPool = await mysql.createPool({
+                host: process.env.DB_HOST,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_NAME,
+                waitForConnections: true,
+                connectionLimit: 10,
+                queueLimit: 0
+            });
+
+            // Create VPS connection pool if VPS credentials are provided
+            if (process.env.VPS_DB_HOST) {
+                this.vpsPool = await mysql.createPool({
+                    host: process.env.VPS_DB_HOST,
+                    user: process.env.VPS_DB_USER,
+                    password: process.env.VPS_DB_PASSWORD,
+                    database: process.env.VPS_DB_NAME,
+                    waitForConnections: true,
+                    connectionLimit: 5,
+                    queueLimit: 0
+                });
+            }
+
+            log.info('Database pools created successfully');
+            return true;
+        } catch (error) {
+            log.error('Failed to create database pools:', error);
+            throw error;
+        }
+    }
+
+    async query(sql, params, useVPS = false) {
+        try {
+            const pool = useVPS ? this.vpsPool : this.localPool;
+            if (!pool) {
+                throw new Error('Database pool not initialized');
+            }
+
+            // Extra VPS checks
+            if (useVPS) {
+                // ...alternative feature checks...
+            }
+
+            const [results] = await pool.execute(sql, params);
+            return results;
+        } catch (error) {
+            if (useVPS) logVPSOperation(error);
+            log.error('Query error:', error);
+            throw error;
+        }
+    }
+
+    async end() {
+        if (this.localPool) await this.localPool.end();
+        if (this.vpsPool) await this.vpsPool.end();
+    }
+}
+
+export const db = new DatabaseManager();

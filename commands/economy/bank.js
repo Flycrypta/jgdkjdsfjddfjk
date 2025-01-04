@@ -1,9 +1,8 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { BANKING } from '../../utils/economy.js';
-import { formatCurrency } from '../../utils/index.js';
-import BaseCommand from '../base-command.js';
-import { ActivityManager } from '../../utils/activityManager.js';
-import { dbManager } from '../../db/database.js';
+import { resolveImportPath } from '../../utils/paths.js';
+import { BANKING } from resolveImportPath('../../utils/economy.js');
+import BaseCommand from resolveImportPath('../base-command.js');
+import { dbManager } from resolveImportPath('../../db/database.js');
 
 export default class BankCommand extends BaseCommand {
     constructor() {

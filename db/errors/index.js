@@ -1,30 +1,18 @@
-export const DatabaseErrorCodes = {
-    TRANSACTION_FAILED: 'TRANSACTION_FAILED',
-    INITIALIZATION_FAILED: 'INITIALIZATION_FAILED',
-    QUERY_FAILED: 'QUERY_FAILED'
+export * from './DatabaseError.js';
+export * from './ErrorCodes.js';
+
+export const createError = (code, details) => {
+    return new DatabaseError(`Database error: ${code}`, code, details);
 };
 
-export class DatabaseError extends Error {
-    constructor(code, details = {}) {
-        super(`Database Error: ${code}`);
-        this.code = code;
-        this.details = details;
-        this.name = 'DatabaseError';
-    }
-}
+export { DatabaseMonitor } from './DatabaseMonitor.js';
 
-export class DatabaseMonitor {
-    constructor(logger) {
-        this.logger = logger || console;
-    }
-
-    trackError(error) {
-        this.logger.error('Database Error:', {
-            code: error.code,
-            message: error.message,
-            details: error.details
-        });
-    }
-}
-
-export const createError = (code, details = {}) => new DatabaseError(code, details);
+export const trackError = (logger, error) => {
+    if (!logger) return;
+    logger.error('Database Error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        context: error.context
+    });
+};

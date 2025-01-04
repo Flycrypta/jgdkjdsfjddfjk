@@ -1,13 +1,10 @@
 import { dbManager } from '../db/database.js';
 import { join } from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export class StatsManager {
     constructor() {
         this.db = dbManager.db;
-        this.dataPath = join(__dirname, '..', 'data');
+        this.dataPath = join('..', 'data');
     }
 
     async updateItemStats(itemId) {
