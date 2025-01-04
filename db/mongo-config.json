@@ -1,0 +1,11 @@
+{
+    "mongodb": {
+        "uri": "mongodb://127.0.0.1:27017",
+        "database": "discordbot",
+        "options": {
+            "useNewUrlParser": true,
+            "useUnifiedTopology": true,
+            "retryWrites": true
+        }
+    }
+}

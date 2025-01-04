@@ -1,0 +1,12 @@
+{
+    "sqltools.connections": [
+        {
+            "name": "Local SQLite",
+            "driver": "SQLite",
+            "database": "${workspaceFolder:Discord bot 2}/db/botData.db"
+        }
+    ],
+    "terminal.explorerKind": "integrated",
+    "javascript.preferences.importModuleSpecifier": "relative",
+    "CodeGPT.apiKey": "CodeGPT Plus Beta"
+}

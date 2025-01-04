@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int         @id @default(autoincrement())
+  userId      String      @unique // Discord user ID
+  balance     Int         @default(0)
+  lastReward  DateTime    @default(now())
+  inventory   Inventory[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+model Inventory {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [userId])
+  userId    String
+  itemId    String   // Reference to item ID from recipes
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@index([itemId])
+}
+
+// Optional: Item model if you want to store item metadata
+model Item {
+  id          String   @id // Same as itemId in recipes
+  name        String
+  description String?
+  category    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+}

@@ -1,0 +1,1 @@
+// Basic ban command 

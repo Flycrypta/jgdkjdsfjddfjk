@@ -1,0 +1,259 @@
+[2025-01-01T20:55:56.642Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T20:58:19.260Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T20:59:35.362Z] Error executing statement: CREATE INDEX IF NOT EXISTS idx_item_stats_rarity ON item_statistics(rarity_percentage)
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T20:59:35.363Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:02:17.350Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:06:01.040Z] Schema initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:06:01.042Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:14:00.564Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:15:23.256Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:19:58.932Z] Database initialization failed
+{}
+
+[2025-01-01T21:21:35.361Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:23:26.830Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T21:29:07.415Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T22:02:10.697Z] Failed to prepare statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T22:02:10.700Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T22:02:55.947Z] Failed to prepare statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T22:02:55.949Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:47:43.725Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:51:21.942Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:53:26.840Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:54:49.520Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:57:17.022Z] Failed to prepare statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-01T23:57:17.023Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T00:00:44.094Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T00:03:51.573Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:00:04.511Z] Database initialization failed
+{}
+
+[2025-01-02T01:00:54.420Z] Database initialization failed
+{}
+
+[2025-01-02T01:31:18.231Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:31:18.233Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:32:10.139Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:32:10.142Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:33:32.144Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:33:32.147Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:39:37.222Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:39:37.224Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:42:38.379Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T01:42:38.382Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:15:33.281Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:15:33.284Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:17:20.043Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:17:20.045Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:22:34.428Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T04:22:34.431Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:12:56.176Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:12:56.179Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:15:01.252Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:53:24.573Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:53:24.576Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:55:30.531Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:55:30.534Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T10:58:45.758Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T11:00:13.274Z] Failed to prepare database statements
+{
+  "code": "SQLITE_ERROR"
+}
+
+[2025-01-02T11:00:13.276Z] Database initialization failed
+{
+  "code": "SQLITE_ERROR"
+}
+
